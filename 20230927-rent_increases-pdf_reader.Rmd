@@ -66,22 +66,29 @@ image_proc = function() {
 ```{r}
 result = image_proc()
 
+# The pattern is rent_number, date, "to", date, percent for 1 year increase, percent for 2 year increase.
+
 result2 = result |> 
   mutate(word_number = row_number(),
-         rent_number = as.integer(word),
+         # rent_number = as.integer(str_extract(word, "^[:digit:]+")),
+         rent_number=as.integer(word),
          date_start = try(mdy(word), silent=TRUE),
          date_end = try(mdy(word), silent=TRUE),
          one_year_raise = if_else(str_detect(word, "%"), str_replace(word, "%", ""), as.character(NA)),
          two_year_raise = if_else(str_detect(word, "%"), str_replace(word, "%", ""), as.character(NA)),
-         col1 = case_when(rent_number %in% c(1:length(word_number)) & !is.na(lead(date_start,1)) ~ lead(date_start, 1)),
-         col2 = case_when(rent_number %in% c(1:length(word_number)) & !is.na(lead(date_end, 3)) ~ lead(date_end, 3)),
-         col3 = case_when(rent_number %in% c(1:length(word_number)) & !is.na(lead(one_year_raise, 4)) ~ lead(one_year_raise, 4)),
-         col4 = case_when(rent_number %in% c(1:length(word_number)) & !is.na(lead(two_year_raise, 5)) ~ as.numeric(lead(two_year_raise, 5)))) |>
+         col1 = case_when(rent_number %in% c(1:54) & !is.na(lead(date_start,1)) ~ lead(date_start, 1)),
+         col2 = case_when(rent_number %in% c(1:54) & !is.na(lead(date_end, 3)) ~ lead(date_end, 3)),
+         col3 = case_when(rent_number %in% c(1:54) & !is.na(lead(one_year_raise, 4)) ~ lead(one_year_raise, 4)),
+         col4 = case_when(rent_number %in% c(1:54) & !is.na(lead(two_year_raise, 5)) ~ as.numeric(lead(two_year_raise, 5)))) |>
   filter(!is.na(rent_number),
          !is.na(col1)) |> 
   select(rent_number, starts_with("col"))
 # result |> 
 #   filter(word == "32")
+# tail(result, 1000)
+# result2
+# result
+  
 ```
 
 ```{r}
