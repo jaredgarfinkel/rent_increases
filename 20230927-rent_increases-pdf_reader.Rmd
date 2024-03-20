@@ -5,6 +5,9 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+The histoircal rent increases were found here:  
+[https://rentguidelinesboard.cityofnewyork.us/wp-content/uploads/2019/08/aptorders.pdf]
+
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(viridis)
@@ -81,9 +84,18 @@ result2 |>
 
 ```{r}
 result2 |> 
+  mutate(col3 = as.numeric(col3)) |> 
+  reframe(mean_1_year_increase = mean(col3, na.rm=TRUE),
+          sd_1_year_increase = sd(col3, na.rm=TRUE),
+          mean_2_year_increase = mean(col4, na.rm=TRUE),
+          sd_2_year_increase = sd(col4, na.rm=TRUE))
+
+result2 |> 
   ggplot(aes(x = col1, y = col4)) +
   geom_point() +
-  geom_smooth(se = FALSE)
+  geom_smooth(se = FALSE) +
+  geom_line(aes(x = col1, y = mean(col4, na.rm=TRUE))) +
+  geom_label(aes(label = str_sub(col1, start = 1, end = 4)), position = position_jitter(width = 0.4, height = 0.4))
 
 ```
 
