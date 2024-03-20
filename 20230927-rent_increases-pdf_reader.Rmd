@@ -8,6 +8,13 @@ output: html_document
 The histoircal rent increases were found here:  
 [https://rentguidelinesboard.cityofnewyork.us/wp-content/uploads/2019/08/aptorders.pdf]
 
+There are more here:
+
+[https://rentguidelinesboard.cityofnewyork.us/wp-content/uploads/2021/07/apartmentchart.pdf]
+
+And here:
+[https://rentguidelinesboard.cityofnewyork.us/wp-content/uploads/2022/06/2022-Apartment-Chart.pdf]
+
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(viridis)
@@ -33,7 +40,8 @@ theme_set(theme_minimal() + theme(legend.position = "bottom"))
 
 ```{r}
 eng = tesseract("eng")
-path = "./data/rent_increases.pdf"
+# path = "./data/rent_increases.pdf"
+path = "./data/2022-Apartment-Chart.pdf"
 images = pdftools::pdf_convert(path, dpi = 250)
 ```
 
@@ -65,10 +73,10 @@ result2 = result |>
          date_end = try(mdy(word), silent=TRUE),
          one_year_raise = if_else(str_detect(word, "%"), str_replace(word, "%", ""), as.character(NA)),
          two_year_raise = if_else(str_detect(word, "%"), str_replace(word, "%", ""), as.character(NA)),
-         col1 = case_when(rent_number %in% c(1:51) & !is.na(lead(date_start,1)) ~ lead(date_start, 1)),
-         col2 = case_when(rent_number %in% c(1:51) & !is.na(lead(date_end, 3)) ~ lead(date_end, 3)),
-         col3 = case_when(rent_number %in% c(1:51) & !is.na(lead(one_year_raise, 4)) ~ lead(one_year_raise, 4)),
-         col4 = case_when(rent_number %in% c(1:51) & !is.na(lead(two_year_raise, 5)) ~ as.numeric(lead(two_year_raise, 5)))) |>
+         col1 = case_when(rent_number %in% c(1:length(word_number)) & !is.na(lead(date_start,1)) ~ lead(date_start, 1)),
+         col2 = case_when(rent_number %in% c(1:length(word_number)) & !is.na(lead(date_end, 3)) ~ lead(date_end, 3)),
+         col3 = case_when(rent_number %in% c(1:length(word_number)) & !is.na(lead(one_year_raise, 4)) ~ lead(one_year_raise, 4)),
+         col4 = case_when(rent_number %in% c(1:length(word_number)) & !is.na(lead(two_year_raise, 5)) ~ as.numeric(lead(two_year_raise, 5)))) |>
   filter(!is.na(rent_number),
          !is.na(col1)) |> 
   select(rent_number, starts_with("col"))
@@ -83,6 +91,8 @@ result2 |>
 
 
 ```{r}
+result2
+
 result2 |> 
   mutate(col3 = as.numeric(col3)) |> 
   reframe(mean_1_year_increase = mean(col3, na.rm=TRUE),
@@ -91,11 +101,12 @@ result2 |>
           sd_2_year_increase = sd(col4, na.rm=TRUE))
 
 result2 |> 
+  # filter(rent_number %in% c(40:54)) |> 
   ggplot(aes(x = col1, y = col4)) +
   geom_point() +
   geom_smooth(se = FALSE) +
   geom_line(aes(x = col1, y = mean(col4, na.rm=TRUE))) +
-  geom_label(aes(label = str_sub(col1, start = 1, end = 4)), position = position_jitter(width = 0.4, height = 0.4))
+  geom_label(aes(label = str_sub(col2, start = 1, end = 4)), position = position_jitter(width = 0.4, height = 0.4))
 
 ```
 
